@@ -261,14 +261,13 @@ export default function App() {
           <div className="flex flex-col md:flex-row items-center gap-16">
             <div className="w-full md:w-1/2 flex justify-center">
               <div className={`relative w-full max-w-[315px] aspect-[9/16] rounded-[3rem] border-[8px] shadow-2xl overflow-hidden transition-colors duration-300 ${theme === 'dark' ? 'bg-black border-[#222]' : 'bg-white border-gray-200'}`}>
-                {/* Placeholder for YouTube Shorts */}
-                <div className={`absolute inset-0 flex flex-col items-center justify-center text-center p-8 ${theme === 'dark' ? 'bg-zinc-900' : 'bg-gray-100'}`}>
-                  <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center mb-4">
-                    <div className="w-0 h-0 border-t-[10px] border-t-transparent border-l-[18px] border-l-white border-b-[10px] border-b-transparent ml-1"></div>
-                  </div>
-                  <p className={`font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>YouTube Shorts</p>
-                  <p className="text-gray-500 text-sm">Vertical Video Placeholder</p>
-                </div>
+                <iframe
+                  className="absolute inset-0 w-full h-full"
+                  src="https://www.youtube.com/embed/K-L4QmaOp1o"
+                  title="Write Right Concept"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                  allowFullScreen
+                />
               </div>
             </div>
             <div className="w-full md:w-1/2">
