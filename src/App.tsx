@@ -18,8 +18,9 @@ import {
   Sun,
   Moon
 } from 'lucide-react';
+import logoSrc from './assets/Write_Right_Logo.png';
 
-const Navbar = ({ theme, toggleTheme }: { theme: string, toggleTheme: () => void }) => {
+const Navbar = ({ theme, toggleTheme, logoSrc }: { theme: string, toggleTheme: () => void, logoSrc: string }) => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -50,9 +51,7 @@ const Navbar = ({ theme, toggleTheme }: { theme: string, toggleTheme: () => void
           className="flex items-center gap-3 cursor-pointer group"
           onClick={scrollToTop}
         >
-          <div className="w-10 h-10 bg-teal-primary rounded-lg flex items-center justify-center transition-transform group-hover:scale-110">
-            <PenTool className="text-white w-6 h-6" />
-          </div>
+          <img src={logoSrc} alt="Write Right" className="h-10 w-auto object-contain transition-transform group-hover:scale-110" />
           <span className={`text-xl font-bold tracking-tight ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Write Right</span>
         </div>
 
@@ -165,7 +164,7 @@ export default function App() {
 
   return (
     <div className={`min-h-screen font-sans selection:bg-teal-primary/30 transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0a0a0a] text-white' : 'bg-white text-black'}`}>
-      <Navbar theme={theme} toggleTheme={toggleTheme} />
+      <Navbar theme={theme} toggleTheme={toggleTheme} logoSrc={logoSrc} />
 
       {/* Hero Section */}
       <header className={`relative h-screen flex items-center justify-center overflow-hidden ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
@@ -389,9 +388,7 @@ export default function App() {
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div className="col-span-2">
               <div className="flex items-center gap-3 mb-6">
-                <div className="w-8 h-8 bg-teal-primary rounded flex items-center justify-center">
-                  <PenTool className="text-white w-5 h-5" />
-                </div>
+                <img src={logoSrc} alt="Write Right" className="h-10 w-auto object-contain" />
                 <span className={`text-xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Write Right</span>
               </div>
               <p className="text-gray-500 max-w-sm">
