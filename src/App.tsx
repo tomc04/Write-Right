@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Search,
@@ -500,11 +500,11 @@ export default function App() {
   ];
 
   const teamMembers = [
-    { name: 'Brian Koh', role: '3rd Year', image: '/images/team_brian.webp' },
-    { name: 'David Lym', role: '4th Year', image: '/images/team_david.webp' },
-    { name: 'Keanu Thakalath', role: 'Senior Software Expert', image: '/images/team_keanu.webp' },
-    { name: 'Kemin Li', role: '3rd Year', image: '/images/team_kemin.webp' },
-    { name: 'Thomas Chen', role: '4th Year', image: '/images/team_thomas.webp' },
+    { name: 'Brian Koh', role: '3rd Year', image: '/images/team_brian.webp', link: '' },
+    { name: 'David Lym', role: '4th Year', image: '/images/team_david.webp', link: '' },
+    { name: 'Keanu Thakalath', role: 'Senior Software Expert', image: '/images/team_keanu.webp', link: '' },
+    { name: 'Kemin Li', role: '3rd Year', image: '/images/team_kemin.webp', link: '' },
+    { name: 'Thomas Chen', role: '4th Year', image: '/images/team_thomas.webp', link: '' },
   ];
 
   return (
@@ -712,16 +712,9 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-6">
           <SectionHeading title="Meet the Team" subtitle="The creative minds behind Write Right" theme={theme} />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
-            {teamMembers.map((member, index) => (
-              <motion.div
-                key={member.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="text-center group"
-              >
-                <div className={`relative mb-6 mx-auto w-48 h-48 md:w-full md:h-auto aspect-square overflow-hidden rounded-2xl transition-all duration-500 grayscale-0`}>
+            {teamMembers.map((member, index) => {
+              const imageContent = (
+                <div className="relative mb-6 mx-auto w-48 h-48 md:w-full md:h-auto aspect-square overflow-hidden rounded-2xl transition-all duration-500 grayscale-0">
                   <img
                     src={member.image}
                     alt={member.name}
@@ -730,10 +723,34 @@ export default function App() {
                   />
                   <div className="absolute inset-0 bg-teal-primary/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
                 </div>
-                <h4 className={`text-lg font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{member.name}</h4>
-                <p className="text-teal-primary text-sm font-medium uppercase tracking-wider">{member.role}</p>
-              </motion.div>
-            ))}
+              );
+
+              return (
+                <motion.div
+                  key={member.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  className="text-center group"
+                >
+                  {member.link
+                    ? (
+                      <a
+                        href={member.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-block"
+                      >
+                        {imageContent}
+                      </a>
+                    )
+                    : imageContent}
+                  <h4 className={`text-lg font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{member.name}</h4>
+                  <p className="text-teal-primary text-sm font-medium uppercase tracking-wider">{member.role}</p>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
