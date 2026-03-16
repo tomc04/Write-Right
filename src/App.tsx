@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import { motion, AnimatePresence } from 'motion/react';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'motion/react';
 import {
   Search,
   Lightbulb,
@@ -101,11 +101,23 @@ const Navbar = ({ theme, toggleTheme, logoSrc }: { theme: string; toggleTheme: (
 // ─── Section Heading ─────────────────────────────────────────────────────────
 
 const SectionHeading = ({ title, subtitle, theme }: { title: string; subtitle?: string; theme: string }) => (
-  <div className="mb-12">
+  <motion.div
+    className="mb-12"
+    initial={{ opacity: 0, y: 30 }}
+    whileInView={{ opacity: 1, y: 0 }}
+    transition={{ duration: 0.6 }}
+    viewport={{ once: true }}
+  >
     <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{title}</h2>
     {subtitle && <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} max-w-2xl`}>{subtitle}</p>}
-    <div className="w-20 h-1 bg-teal-primary mt-6"></div>
-  </div>
+    <motion.div
+      className="w-20 h-1 bg-teal-primary mt-6"
+      initial={{ width: 0 }}
+      whileInView={{ width: 80 }}
+      transition={{ duration: 0.8, delay: 0.3 }}
+      viewport={{ once: true }}
+    />
+  </motion.div>
 );
 
 // ─── Process Modal ───────────────────────────────────────────────────────────
@@ -256,11 +268,9 @@ const ProcessModal = ({ step, isOpen, onClose, theme }: { step: ProcessStep | nu
   );
 };
 
-// ─── Demo Image Carousel ────────────────────────────────────────────────────
+// ─── Demo Image Carousel (Scroll-Driven) ────────────────────────────────────
 
 const DemoCarousel = ({ theme }: { theme: string }) => {
-  const [current, setCurrent] = useState(0);
-
   const screens = [
     { src: '/images/3d_mockup_landing_page.webp', title: 'Landing Page', description: 'Start a new research project by entering your assignment details and rubric requirements.' },
     { src: '/images/3d_mockup_project_setup.webp', title: 'Project Setup', description: 'Share your project details so Write Right can tailor its guidance to your specific assignment.' },
@@ -274,54 +284,204 @@ const DemoCarousel = ({ theme }: { theme: string }) => {
     { src: '/images/3d_mockup_robot_review.webp', title: 'Robot Review', description: 'Accept, reject, or iterate on suggestions with full control over your writing process.' },
   ];
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: containerRef });
+  const [current, setCurrent] = useState(0);
+
+  useEffect(() => {
+    const unsubscribe = scrollYProgress.on("change", (v) => {
+      // Map scroll progress [0, 1] to screen index [0, screens.length - 1]
+      const index = Math.min(
+        Math.floor(v * screens.length),
+        screens.length - 1
+      );
+      setCurrent(index);
+    });
+    return unsubscribe;
+  }, [scrollYProgress, screens.length]);
+
+  // Scale the progress bar width
+  const progressWidth = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
+
   return (
-    <div>
-      {/* Main Screen Display */}
-      <div className={`relative rounded-3xl overflow-hidden border shadow-2xl mb-8 ${theme === 'dark' ? 'bg-black border-white/10' : 'bg-white border-black/10'}`}>
-        <div className="flex items-center justify-center min-h-[300px] md:min-h-[500px] p-4">
-          <img
-            src={screens[current].src}
-            alt={screens[current].title}
-            className="max-w-full max-h-[480px] object-contain rounded-xl"
-          />
+    // Tall scroll track: each screen gets ~80vh of scroll distance
+    <div ref={containerRef} style={{ height: `${screens.length * 80}vh` }} className="relative">
+      {/* Sticky viewport */}
+      <div className="sticky top-0 h-screen flex flex-col items-center justify-center px-6 py-8">
+        <div className="max-w-5xl w-full mx-auto">
+          {/* Progress bar */}
+          <div className={`w-full h-1 rounded-full mb-6 overflow-hidden ${theme === 'dark' ? 'bg-white/10' : 'bg-black/10'}`}>
+            <motion.div className="h-full bg-teal-primary rounded-full" style={{ width: progressWidth }} />
+          </div>
+
+          {/* Main Screen Display */}
+          <div className={`relative rounded-3xl overflow-hidden border shadow-2xl ${theme === 'dark' ? 'bg-black border-white/10' : 'bg-white border-black/10'}`}>
+            <div className="flex items-center justify-center min-h-[300px] md:min-h-[500px] p-4 relative">
+              <AnimatePresence mode="wait">
+                <motion.img
+                  key={current}
+                  src={screens[current].src}
+                  alt={screens[current].title}
+                  className="max-w-full max-h-[480px] object-contain rounded-xl"
+                  initial={{ opacity: 0, y: 30, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -30, scale: 0.97 }}
+                  transition={{ duration: 0.35, ease: "easeInOut" }}
+                />
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Screen Info */}
+          <div className="text-center mt-6">
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={current}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.25 }}
+              >
+                <h4 className={`text-xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{screens[current].title}</h4>
+                <p className={`max-w-xl mx-auto ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{screens[current].description}</p>
+              </motion.div>
+            </AnimatePresence>
+            <p className={`text-sm mt-3 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`}>{current + 1} / {screens.length}</p>
+          </div>
+
+          {/* Dot indicators */}
+          <div className="flex gap-2 justify-center mt-4">
+            {screens.map((_, i) => (
+              <div
+                key={i}
+                className={`w-2 h-2 rounded-full transition-all duration-300 ${i === current ? 'bg-teal-primary w-6' : theme === 'dark' ? 'bg-white/20' : 'bg-black/20'}`}
+              />
+            ))}
+          </div>
+
+          {/* Scroll hint */}
+          {current < screens.length - 1 && (
+            <motion.p
+              className={`text-center text-xs mt-4 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`}
+              animate={{ opacity: [0.4, 0.8, 0.4] }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              Scroll to explore
+            </motion.p>
+          )}
         </div>
-        {/* Navigation */}
-        <button
-          onClick={() => setCurrent(prev => Math.max(prev - 1, 0))}
-          disabled={current === 0}
-          className={`absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center transition-all ${current === 0 ? 'opacity-30 cursor-not-allowed' : 'opacity-80 hover:opacity-100'} ${theme === 'dark' ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-black/10 text-black hover:bg-black/20'}`}
-        >
-          <ChevronLeft size={20} />
-        </button>
-        <button
-          onClick={() => setCurrent(prev => Math.min(prev + 1, screens.length - 1))}
-          disabled={current === screens.length - 1}
-          className={`absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center transition-all ${current === screens.length - 1 ? 'opacity-30 cursor-not-allowed' : 'opacity-80 hover:opacity-100'} ${theme === 'dark' ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-black/10 text-black hover:bg-black/20'}`}
-        >
-          <ChevronRight size={20} />
-        </button>
-      </div>
-
-      {/* Screen Info */}
-      <div className="text-center mb-8">
-        <h4 className={`text-xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{screens[current].title}</h4>
-        <p className={`max-w-xl mx-auto ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{screens[current].description}</p>
-        <p className={`text-sm mt-2 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`}>{current + 1} / {screens.length}</p>
-      </div>
-
-      {/* Thumbnail Strip */}
-      <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar justify-center">
-        {screens.map((screen, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            className={`flex-shrink-0 w-20 h-14 md:w-24 md:h-16 rounded-lg overflow-hidden border-2 transition-all ${i === current ? 'border-teal-primary opacity-100' : `${theme === 'dark' ? 'border-white/10' : 'border-black/10'} opacity-50 hover:opacity-80`}`}
-          >
-            <img src={screen.src} alt="" className="w-full h-full object-cover" />
-          </button>
-        ))}
       </div>
     </div>
+  );
+};
+
+// ─── Process Section (Scroll-Driven) ─────────────────────────────────────────
+
+const ProcessSection = ({ processSteps, theme, onStepClick }: { processSteps: ProcessStep[]; theme: string; onStepClick: (i: number) => void }) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end end"] });
+  const [current, setCurrent] = useState(0);
+  const count = processSteps.length;
+
+  useEffect(() => {
+    const unsubscribe = scrollYProgress.on("change", (v) => {
+      const index = Math.min(Math.floor(v * count), count - 1);
+      setCurrent(index);
+    });
+    return unsubscribe;
+  }, [scrollYProgress, count]);
+
+  const progressWidth = useTransform(scrollYProgress, [0, 1], ['0%', '100%']);
+
+  return (
+    <section id="process" className={`transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0a0a0a]' : 'bg-white'}`}>
+      <div ref={containerRef} style={{ height: `${count * 80}vh` }} className="relative">
+        {/* Sticky viewport */}
+        <div className="sticky top-0 h-screen flex flex-col overflow-hidden">
+          {/* Header area */}
+          <div className="pt-24 pb-6 px-6 flex-shrink-0">
+            <div className="max-w-7xl mx-auto">
+              <div className="flex items-end justify-between gap-8 mb-6">
+                <div>
+                  <h2 className={`text-3xl md:text-4xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Our Process</h2>
+                  <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>Click any step to dive deeper into our design journey</p>
+                </div>
+                <p className={`text-sm flex-shrink-0 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`}>
+                  {current + 1} / {count}
+                </p>
+              </div>
+              {/* Progress bar */}
+              <div className={`w-full h-1 rounded-full overflow-hidden ${theme === 'dark' ? 'bg-white/10' : 'bg-black/10'}`}>
+                <motion.div className="h-full bg-teal-primary rounded-full" style={{ width: progressWidth }} />
+              </div>
+            </div>
+          </div>
+
+          {/* Main content area */}
+          <div className="flex-1 flex items-center px-6 pb-16 min-h-0">
+            <div className="max-w-7xl w-full mx-auto">
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={current}
+                  initial={{ opacity: 0, y: 40 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -40 }}
+                  transition={{ duration: 0.35, ease: "easeInOut" }}
+                  className="grid md:grid-cols-2 gap-8 md:gap-12 items-center cursor-pointer"
+                  onClick={() => onStepClick(current)}
+                >
+                  {/* Image */}
+                  <div className={`rounded-2xl overflow-hidden border shadow-lg ${theme === 'dark' ? 'bg-black/40 border-white/5' : 'bg-white border-black/5'}`}>
+                    <img
+                      src={processSteps[current].thumbnail}
+                      alt={processSteps[current].title}
+                      className="w-full aspect-video object-cover"
+                    />
+                  </div>
+
+                  {/* Info */}
+                  <div>
+                    <div className="flex items-center gap-4 mb-6">
+                      <div className="w-14 h-14 bg-teal-primary/10 rounded-2xl flex items-center justify-center text-teal-primary">
+                        {processSteps[current].icon}
+                      </div>
+                      <h3 className={`text-2xl md:text-3xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
+                        {processSteps[current].title}
+                      </h3>
+                    </div>
+                    <p className={`text-lg leading-relaxed mb-6 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                      {processSteps[current].description}
+                    </p>
+                    {processSteps[current].highlights && (
+                      <div className="flex flex-wrap gap-2 mb-6">
+                        {processSteps[current].highlights!.map((h) => (
+                          <span key={h} className={`px-3 py-1 rounded-full text-sm font-medium ${theme === 'dark' ? 'bg-teal-primary/10 text-teal-primary' : 'bg-teal-50 text-teal-700'}`}>
+                            {h}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <span className="text-teal-primary font-medium flex items-center gap-1 group">
+                      Dive deeper <ChevronRight size={16} className="group-hover:translate-x-1 transition-transform" />
+                    </span>
+                  </div>
+                </motion.div>
+              </AnimatePresence>
+            </div>
+          </div>
+
+          {/* Step dots at bottom */}
+          <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2">
+            {processSteps.map((step, i) => (
+              <div
+                key={step.title}
+                className={`h-2 rounded-full transition-all duration-300 ${i === current ? 'w-6 bg-teal-primary' : `w-2 ${theme === 'dark' ? 'bg-white/20' : 'bg-black/20'}`}`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
   );
 };
 
@@ -499,6 +659,36 @@ export default function App() {
     },
   ];
 
+  // ── Intro sequence scroll tracking ──
+  const introRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress: introProgress } = useScroll({
+    target: introRef,
+    offset: ["start start", "end end"],
+  });
+
+  const [introPanel, setIntroPanel] = useState(0);
+  useEffect(() => {
+    const unsubscribe = introProgress.on("change", (v) => {
+      if (v < 0.30) setIntroPanel(0);
+      else if (v < 0.65) setIntroPanel(1);
+      else setIntroPanel(2);
+    });
+    return unsubscribe;
+  }, [introProgress]);
+
+  // Hero transforms
+  const heroOpacity = useTransform(introProgress, [0, 0.25, 0.32], [1, 1, 0]);
+  const heroScale = useTransform(introProgress, [0, 0.32], [1, 0.92]);
+  const heroY = useTransform(introProgress, [0, 0.32], [0, -40]);
+
+  // Problem & Solution transforms
+  const problemOpacity = useTransform(introProgress, [0.25, 0.33, 0.58, 0.65], [0, 1, 1, 0]);
+  const problemY = useTransform(introProgress, [0.25, 0.33, 0.58, 0.65], [80, 0, 0, -40]);
+
+  // Concept transforms
+  const conceptOpacity = useTransform(introProgress, [0.58, 0.67, 1], [0, 1, 1]);
+  const conceptY = useTransform(introProgress, [0.58, 0.67], [80, 0]);
+
   const teamMembers = [
     { name: 'Brian Koh', role: '3rd Year', image: '/images/team_brian.webp' },
     { name: 'David Lym', role: '4th Year', image: '/images/team_david.webp' },
@@ -519,192 +709,210 @@ export default function App() {
         theme={theme}
       />
 
-      {/* Hero Section */}
-      <header className={`relative h-screen flex items-center justify-center overflow-hidden ${theme === 'dark' ? 'bg-black' : 'bg-gray-50'}`}>
-        <div className="absolute inset-0 z-0 opacity-30">
-          <div className={`absolute top-0 left-0 w-full h-full ${theme === 'dark' ? 'bg-[radial-gradient(circle_at_50%_50%,#0d948844,transparent_70%)]' : 'bg-[radial-gradient(circle_at_50%_50%,#0d948822,transparent_70%)]'}`}></div>
-        </div>
-        <div className="relative z-10 text-center px-6 max-w-4xl">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }}>
-            <h1 className={`text-6xl md:text-8xl font-black tracking-tighter mb-6 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
-              WRITE <span className="text-teal-primary italic">RIGHT</span>
-            </h1>
-            <p className={`text-xl md:text-2xl font-light tracking-wide mb-10 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-              The guide for your research journey
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <a href="#problem-solution" className="px-8 py-4 bg-teal-primary text-white font-bold rounded-full hover:bg-teal-700 transition-all transform hover:scale-105 shadow-lg shadow-teal-primary/20">
-                Explore the Journey
-              </a>
-              <a href="#demo" className={`px-8 py-4 font-bold rounded-full transition-all backdrop-blur-sm ${theme === 'dark' ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-black/5 text-black hover:bg-black/10'}`}>
-                Watch Demo
-              </a>
+      {/* ── Intro Sequence (Hero → Problem/Solution → Concept) ── */}
+      <div ref={introRef} style={{ height: '400vh' }} className="relative">
+        {/* Anchor targets for nav links */}
+        <div id="problem-solution" className="absolute" style={{ top: '33%' }} />
+        <div id="concept" className="absolute" style={{ top: '67%' }} />
+
+        {/* Sticky viewport */}
+        <div className={`sticky top-0 h-screen overflow-hidden ${theme === 'dark' ? 'bg-[#0a0a0a]' : 'bg-white'}`}>
+          {/* Radial background glow */}
+          <div className="absolute inset-0 z-0 opacity-30">
+            <div className={`absolute top-0 left-0 w-full h-full ${theme === 'dark' ? 'bg-[radial-gradient(circle_at_50%_50%,#0d948844,transparent_70%)]' : 'bg-[radial-gradient(circle_at_50%_50%,#0d948822,transparent_70%)]'}`} />
+          </div>
+
+          {/* Panel indicator dots */}
+          <div className="absolute right-6 top-1/2 -translate-y-1/2 z-20 flex flex-col gap-3">
+            {['Intro', 'Problem', 'Concept'].map((label, i) => (
+              <div
+                key={label}
+                className={`w-2 rounded-full transition-all duration-300 ${i === introPanel ? 'h-6 bg-teal-primary' : `h-2 ${theme === 'dark' ? 'bg-white/20' : 'bg-black/20'}`}`}
+                title={label}
+              />
+            ))}
+          </div>
+
+          {/* ─ Panel 0: Hero ─ */}
+          <motion.div
+            className="absolute inset-0 z-10 flex items-center justify-center"
+            style={{ opacity: heroOpacity, scale: heroScale, y: heroY, pointerEvents: introPanel === 0 ? 'auto' : 'none' }}
+          >
+            <div className="text-center px-6 max-w-4xl">
+              <motion.h1
+                className={`text-6xl md:text-8xl font-black tracking-tighter mb-6 ${theme === 'dark' ? 'text-white' : 'text-black'}`}
+                initial={{ opacity: 0, y: 30, scale: 0.95 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+              >
+                WRITE <span className="text-teal-primary italic">RIGHT</span>
+              </motion.h1>
+              <motion.p
+                className={`text-xl md:text-2xl font-light tracking-wide mb-10 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.5 }}
+              >
+                The guide for your research journey
+              </motion.p>
+              <motion.div
+                className="flex flex-col sm:flex-row gap-4 justify-center"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.8 }}
+              >
+                <a href="#problem-solution" className="px-8 py-4 bg-teal-primary text-white font-bold rounded-full hover:bg-teal-700 transition-all transform hover:scale-105 shadow-lg shadow-teal-primary/20">
+                  Explore the Journey
+                </a>
+                <a href="#demo" className={`px-8 py-4 font-bold rounded-full transition-all backdrop-blur-sm ${theme === 'dark' ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-black/5 text-black hover:bg-black/10'}`}>
+                  Watch Demo
+                </a>
+              </motion.div>
+            </div>
+            {/* Scroll indicator */}
+            <motion.div
+              className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1.2, duration: 0.6 }}
+            >
+              <div className={`w-6 h-10 border-2 rounded-full flex justify-center p-1 ${theme === 'dark' ? 'border-white/20' : 'border-black/20'}`}>
+                <div className="w-1 h-2 bg-teal-primary rounded-full"></div>
+              </div>
+            </motion.div>
+          </motion.div>
+
+          {/* ─ Panel 1: Problem & Solution ─ */}
+          <motion.div
+            className="absolute inset-0 z-10 flex items-center justify-center px-6"
+            style={{ opacity: problemOpacity, y: problemY, pointerEvents: introPanel === 1 ? 'auto' : 'none' }}
+          >
+            <div className="max-w-7xl w-full mx-auto">
+              <div className="grid md:grid-cols-2 gap-8 items-stretch">
+                {/* Problem */}
+                <div className={`p-8 md:p-10 rounded-3xl border flex flex-col transition-colors duration-300 ${theme === 'dark' ? 'bg-[#111] border-white/5' : 'bg-gray-50 border-black/5'}`}>
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center">
+                      <AlertCircle className="text-red-500 w-6 h-6" />
+                    </div>
+                    <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>The Problem</h3>
+                  </div>
+                  <p className={`text-lg leading-relaxed flex-grow ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Students struggle with information overload when researching papers. A single search can return
+                    over <strong className={theme === 'dark' ? 'text-white' : 'text-black'}>600 million results</strong>,
+                    creating an overwhelming decision-making burden. Our research found that <strong className={theme === 'dark' ? 'text-white' : 'text-black'}>79% of students</strong> keep
+                    all source tabs open while taking notes, and over half spend far more time researching than they expect.
+                  </p>
+                </div>
+
+                {/* Solution */}
+                <div className={`p-8 md:p-10 rounded-3xl border flex flex-col relative overflow-hidden transition-colors duration-300 ${theme === 'dark' ? 'bg-[#111] border-teal-primary/20' : 'bg-teal-50/30 border-teal-primary/10'}`}>
+                  <div className="absolute top-0 right-0 w-32 h-32 bg-teal-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
+                  <div className="flex items-center gap-4 mb-6">
+                    <div className="w-12 h-12 bg-teal-primary/10 rounded-xl flex items-center justify-center">
+                      <CheckCircle2 className="text-teal-primary w-6 h-6" />
+                    </div>
+                    <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>The Solution</h3>
+                  </div>
+                  <p className={`text-lg leading-relaxed mb-4 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Write Right is a web-based research assistant that guides students through the entire research-to-writing process:
+                  </p>
+                  <ul className="space-y-3 flex-grow">
+                    {[
+                      { label: 'Topic Evaluation', desc: 'AI-powered scoring on complexity, nicheness, and rubric fit' },
+                      { label: 'Source Organization', desc: 'Categorize and track sources with AI-suggested vs. user-uploaded labels' },
+                      { label: 'Writing Assistance', desc: 'Contextual suggestions with full control to accept, reject, or iterate' },
+                    ].map((item) => (
+                      <li key={item.label} className="flex items-start gap-3">
+                        <div className="w-2 h-2 bg-teal-primary rounded-full mt-2 flex-shrink-0"></div>
+                        <div>
+                          <span className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{item.label}:</span>{' '}
+                          <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>{item.desc}</span>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
             </div>
           </motion.div>
-        </div>
-        <div className="absolute bottom-10 left-1/2 -translate-x-1/2 animate-bounce">
-          <div className={`w-6 h-10 border-2 rounded-full flex justify-center p-1 ${theme === 'dark' ? 'border-white/20' : 'border-black/20'}`}>
-            <div className="w-1 h-2 bg-teal-primary rounded-full"></div>
-          </div>
-        </div>
-      </header>
 
-      {/* Section 1: Problem & Solution */}
-      <section id="problem-solution" className={`py-24 transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0a0a0a]' : 'bg-white'}`}>
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="grid md:grid-cols-2 gap-12 items-stretch">
-            {/* Problem */}
-            <motion.div
-              whileInView={{ opacity: 1, x: 0 }}
-              initial={{ opacity: 0, x: -50 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className={`p-10 rounded-3xl border flex flex-col transition-colors duration-300 ${theme === 'dark' ? 'bg-[#111] border-white/5' : 'bg-gray-50 border-black/5'}`}
-            >
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-red-500/10 rounded-xl flex items-center justify-center">
-                  <AlertCircle className="text-red-500 w-6 h-6" />
+          {/* ─ Panel 2: Concept ─ */}
+          <motion.div
+            className="absolute inset-0 z-10 flex items-center justify-center px-6"
+            style={{ opacity: conceptOpacity, y: conceptY, pointerEvents: introPanel === 2 ? 'auto' : 'none' }}
+          >
+            <div className="max-w-7xl w-full mx-auto">
+              <div className="flex flex-col md:flex-row items-center gap-12 md:gap-16">
+                <div className="w-full md:w-1/2 flex justify-center">
+                  <div className={`relative w-full max-w-[280px] aspect-[9/16] rounded-[3rem] border-[8px] shadow-2xl overflow-hidden transition-colors duration-300 ${theme === 'dark' ? 'bg-black border-[#222]' : 'bg-white border-gray-200'}`}>
+                    <iframe
+                      className="absolute inset-0 w-full h-full"
+                      src="https://www.youtube.com/embed/K-L4QmaOp1o"
+                      title="Write Right Concept"
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
+                    />
+                  </div>
                 </div>
-                <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>The Problem</h3>
-              </div>
-              <p className={`text-lg leading-relaxed flex-grow ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                Students struggle with information overload when researching papers. A single search can return
-                over <strong className={theme === 'dark' ? 'text-white' : 'text-black'}>600 million results</strong>,
-                creating an overwhelming decision-making burden. Our research found that <strong className={theme === 'dark' ? 'text-white' : 'text-black'}>79% of students</strong> keep
-                all source tabs open while taking notes, and over half spend far more time researching than they expect.
-                Choosing topics, finding credible sources, and ensuring writing meets rubric requirements are consistently stressful.
-              </p>
-            </motion.div>
-
-            {/* Solution */}
-            <motion.div
-              whileInView={{ opacity: 1, x: 0 }}
-              initial={{ opacity: 0, x: 50 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className={`p-10 rounded-3xl border flex flex-col relative overflow-hidden transition-colors duration-300 ${theme === 'dark' ? 'bg-[#111] border-teal-primary/20' : 'bg-teal-50/30 border-teal-primary/10'}`}
-            >
-              <div className="absolute top-0 right-0 w-32 h-32 bg-teal-primary/5 rounded-full -mr-16 -mt-16 blur-3xl"></div>
-              <div className="flex items-center gap-4 mb-6">
-                <div className="w-12 h-12 bg-teal-primary/10 rounded-xl flex items-center justify-center">
-                  <CheckCircle2 className="text-teal-primary w-6 h-6" />
+                <div className="w-full md:w-1/2">
+                  <h2 className={`text-3xl md:text-4xl font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>Our Concept</h2>
+                  <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} max-w-2xl mb-2`}>See how we envisioned Write Right</p>
+                  <div className="w-20 h-1 bg-teal-primary mt-4 mb-8"></div>
+                  <p className={`text-lg mb-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                    Research shouldn't be a solitary struggle. Write Right provides a dedicated space where students can evaluate topics before committing, organize sources without drowning in tabs, and get AI-powered writing feedback — all while staying in control of their own work.
+                  </p>
+                  <ul className="space-y-4">
+                    {[
+                      'Evaluate topic feasibility before you commit',
+                      'Organize sources with AI-powered categorization',
+                      'Get rubric-aligned writing feedback you control',
+                    ].map((item) => (
+                      <li key={item} className={`flex items-center gap-3 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
+                        <div className="w-2 h-2 bg-teal-primary rounded-full"></div>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <h3 className={`text-2xl font-bold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>The Solution</h3>
-              </div>
-              <p className={`text-lg leading-relaxed mb-6 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                Write Right is a web-based research assistant that guides students through the entire research-to-writing process:
-              </p>
-              <ul className="space-y-3 flex-grow">
-                {[
-                  { label: 'Topic Evaluation', desc: 'AI-powered scoring on complexity, nicheness, and rubric fit to help pick the right topic before committing' },
-                  { label: 'Source Organization', desc: 'Automatically categorize and track sources, with clear labels for AI-suggested vs. user-uploaded materials' },
-                  { label: 'Writing Assistance', desc: 'Contextual suggestions tied to your sources and rubric, with full control to accept, reject, or iterate' },
-                ].map((item) => (
-                  <li key={item.label} className="flex items-start gap-3">
-                    <div className="w-2 h-2 bg-teal-primary rounded-full mt-2 flex-shrink-0"></div>
-                    <div>
-                      <span className={`font-semibold ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{item.label}:</span>{' '}
-                      <span className={theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}>{item.desc}</span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* Section 2: Concept */}
-      <section id="concept" className={`py-24 transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="flex flex-col md:flex-row items-center gap-16">
-            <div className="w-full md:w-1/2 flex justify-center">
-              <div className={`relative w-full max-w-[315px] aspect-[9/16] rounded-[3rem] border-[8px] shadow-2xl overflow-hidden transition-colors duration-300 ${theme === 'dark' ? 'bg-black border-[#222]' : 'bg-white border-gray-200'}`}>
-                <iframe
-                  className="absolute inset-0 w-full h-full"
-                  src="https://www.youtube.com/embed/K-L4QmaOp1o"
-                  title="Write Right Concept"
-                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                  allowFullScreen
-                />
               </div>
             </div>
-            <div className="w-full md:w-1/2">
-              <SectionHeading title="Our Concept" subtitle="See how we envisioned Write Right" theme={theme} />
-              <p className={`text-lg mb-8 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
-                Research shouldn't be a solitary struggle. Write Right provides a dedicated space where students can evaluate topics before committing, organize sources without drowning in tabs, and get AI-powered writing feedback — all while staying in control of their own work.
-              </p>
-              <ul className="space-y-4">
-                {[
-                  'Evaluate topic feasibility before you commit',
-                  'Organize sources with AI-powered categorization',
-                  'Get rubric-aligned writing feedback you control',
-                ].map((item) => (
-                  <li key={item} className={`flex items-center gap-3 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>
-                    <div className="w-2 h-2 bg-teal-primary rounded-full"></div>
-                    {item}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
+          </motion.div>
 
-      {/* Section 3: Process */}
-      <section id="process" className={`py-24 overflow-hidden transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0a0a0a]' : 'bg-white'}`}>
-        <div className="max-w-7xl mx-auto px-6 mb-12">
-          <SectionHeading
-            title="Our Process"
-            subtitle="Click any step to dive deeper into our design journey"
-            theme={theme}
-          />
+          {/* Scroll hint at bottom */}
+          <motion.p
+            className={`absolute bottom-6 left-1/2 -translate-x-1/2 text-xs z-20 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`}
+            animate={{ opacity: [0.3, 0.7, 0.3] }}
+            transition={{ duration: 2, repeat: Infinity }}
+          >
+            Scroll to continue
+          </motion.p>
         </div>
-        <div className="flex overflow-x-auto pb-12 px-6 md:px-[calc((100vw-1280px)/2+24px)] hide-scrollbar gap-6 snap-x">
-          {processSteps.map((step, index) => (
-            <motion.div
-              key={step.title}
-              whileHover={{ y: -10 }}
-              onClick={() => setActiveProcess(index)}
-              className={`min-w-[300px] md:min-w-[350px] rounded-3xl p-8 border snap-start cursor-pointer transition-colors duration-300 ${theme === 'dark' ? 'bg-[#141414] border-white/5 hover:border-teal-primary/30' : 'bg-gray-50 border-black/5 hover:border-teal-primary/30'}`}
-            >
-              <div className="w-14 h-14 bg-teal-primary/10 rounded-2xl flex items-center justify-center mb-6 text-teal-primary">
-                {step.icon}
-              </div>
-              <div className={`aspect-video rounded-2xl mb-6 overflow-hidden border ${theme === 'dark' ? 'bg-black/40 border-white/5' : 'bg-white border-black/5'}`}>
-                <img src={step.thumbnail} alt={step.title} className="w-full h-full object-cover" loading="lazy" />
-              </div>
-              <h4 className={`text-xl font-bold mb-3 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{step.title}</h4>
-              <p className={`${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'} leading-relaxed mb-4`}>{step.description}</p>
-              <span className="text-teal-primary text-sm font-medium flex items-center gap-1">
-                Dive deeper <ChevronRight size={14} />
-              </span>
-            </motion.div>
-          ))}
-        </div>
-      </section>
+      </div>
+
+      {/* Section 3: Process (Scroll-Driven) */}
+      <ProcessSection processSteps={processSteps} theme={theme} onStepClick={setActiveProcess} />
 
       {/* Section 4: Product Demo */}
-      <section id="demo" className={`py-24 transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
-        <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <SectionHeading title="Product Demo" subtitle="Walk through our final design" theme={theme} />
-          </div>
-          <div className="max-w-5xl mx-auto">
-            <DemoCarousel theme={theme} />
-          </div>
-          <div className="text-center mt-12">
-            <a
-              href="https://www.figma.com/proto/Ivp7jg9FGY3nHJIgIwieoa/Write-Right?node-id=0-1&t=aRW3gpdp29MjF2j9-1"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-teal-primary text-white font-semibold rounded-full hover:bg-teal-600 transition-colors"
-            >
-              Try the Interactive Figma Prototype
-              <ChevronRight size={18} />
-            </a>
-          </div>
-        </div>
+      <section id="demo" className={`transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
+        <DemoCarousel theme={theme} />
+        <motion.div
+          className="text-center pb-24 px-6"
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+        >
+          <a
+            href="https://www.figma.com/proto/Ivp7jg9FGY3nHJIgIwieoa/Write-Right?node-id=0-1&t=aRW3gpdp29MjF2j9-1"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-8 py-3 bg-teal-primary text-white font-semibold rounded-full hover:bg-teal-600 transition-colors"
+          >
+            Try the Interactive Figma Prototype
+            <ChevronRight size={18} />
+          </a>
+        </motion.div>
       </section>
 
       {/* Section 5: Meet the Team */}
@@ -740,7 +948,13 @@ export default function App() {
 
       {/* Footer */}
       <footer className={`py-16 border-t transition-colors duration-300 ${theme === 'dark' ? 'bg-black border-white/10' : 'bg-gray-50 border-black/10'}`}>
-        <div className="max-w-7xl mx-auto px-6">
+        <motion.div
+          className="max-w-7xl mx-auto px-6"
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          viewport={{ once: true }}
+        >
           <div className="grid md:grid-cols-4 gap-12 mb-12">
             <div className="col-span-2">
               <div className="flex items-center gap-3 mb-6">
@@ -779,7 +993,7 @@ export default function App() {
               <a href="https://github.com/Brian-K42/Write-Right" target="_blank" rel="noopener noreferrer" className="hover:text-teal-primary transition-colors">GitHub</a>
             </div>
           </div>
-        </div>
+        </motion.div>
       </footer>
     </div>
   );
