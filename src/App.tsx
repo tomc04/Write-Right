@@ -512,7 +512,7 @@ export default function App() {
     { name: 'David Lym', role: '4th Year', image: '/images/team_david.webp', link: '' },
     { name: 'Keanu Thakalath', role: 'Senior Software Expert', image: '/images/team_keanu.webp', link: '' },
     { name: 'Kemin Li', role: '3rd Year', image: '/images/team_kemin.webp', link: '' },
-    { name: 'Thomas Chen', role: '4th Year', image: '/images/team_thomas.webp', link: 'www.linkedin.com/in/thomaschen04' },
+    { name: 'Thomas Chen', role: 'Designer/Developer', image: '/images/team_thomas.webp', link: 'https://www.linkedin.com/in/thomaschen04/' },
   ];
 
   return (
