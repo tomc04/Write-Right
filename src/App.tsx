@@ -687,9 +687,7 @@ export default function App() {
       {/* Section 4: Product Demo */}
       <section id="demo" className={`py-24 transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <SectionHeading title="Product Demo" subtitle="Walk through our final design" theme={theme} />
-          </div>
+          <SectionHeading title="Product Demo" subtitle="Walk through our final design" theme={theme} />
           <div className="max-w-5xl mx-auto">
             <DemoCarousel theme={theme} />
           </div>
@@ -719,16 +717,16 @@ export default function App() {
                 whileInView={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
                 viewport={{ once: true }}
-                className="text-center group"
+                className="text-center"
               >
                 <div className={`relative mb-6 mx-auto w-48 h-48 md:w-full md:h-auto aspect-square overflow-hidden rounded-2xl transition-all duration-500 grayscale-0`}>
                   <img
                     src={member.image}
                     alt={member.name}
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                    className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute inset-0 bg-teal-primary/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
                 </div>
                 <h4 className={`text-lg font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{member.name}</h4>
                 <p className="text-teal-primary text-sm font-medium uppercase tracking-wider">{member.role}</p>
