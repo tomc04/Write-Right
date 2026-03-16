@@ -108,6 +108,14 @@ const SectionHeading = ({ title, subtitle, theme }: { title: string; subtitle?: 
   </div>
 );
 
+function normalizeExternalLink(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(trimmed)) return trimmed; // http://, https://, etc.
+  if (/^(mailto:|tel:)/i.test(trimmed)) return trimmed;
+  return `https://${trimmed.replace(/^\/+/, '')}`;
+}
+
 // ─── Process Modal ───────────────────────────────────────────────────────────
 
 const ProcessModal = ({ step, isOpen, onClose, theme }: { step: ProcessStep | null; isOpen: boolean; onClose: () => void; theme: string }) => {
@@ -737,7 +745,7 @@ export default function App() {
                   {member.link
                     ? (
                       <a
-                        href={member.link}
+                        href={normalizeExternalLink(member.link)}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-block"
