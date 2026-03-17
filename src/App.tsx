@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import {
   Search,
@@ -109,6 +109,14 @@ const SectionHeading = ({ title, subtitle, theme }: { title: string; subtitle?: 
     <div className="w-20 h-1 bg-teal-primary mt-6"></div>
   </div>
 );
+
+function normalizeExternalLink(raw: string): string {
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+  if (/^[a-zA-Z][a-zA-Z\d+\-.]*:\/\//.test(trimmed)) return trimmed; // http://, https://, etc.
+  if (/^(mailto:|tel:)/i.test(trimmed)) return trimmed;
+  return `https://${trimmed.replace(/^\/+/, '')}`;
+}
 
 // ─── Process Modal ───────────────────────────────────────────────────────────
 
@@ -452,11 +460,11 @@ export default function App() {
   ];
 
   const teamMembers = [
-    { name: 'Brian Koh', role: '3rd Year', image: '/images/team_brian.webp' },
-    { name: 'David Lym', role: '4th Year', image: '/images/team_david.webp' },
-    { name: 'Keanu Thakalath', role: 'Senior Software Expert', image: '/images/team_keanu.webp' },
-    { name: 'Kemin Li', role: '3rd Year', image: '/images/team_kemin.webp' },
-    { name: 'Thomas Chen', role: '4th Year', image: '/images/team_thomas.webp' },
+    { name: 'Brian Koh', role: '3rd Year', image: '/images/team_brian.webp', link: 'https://www.linkedin.com/in/briankoh42' },
+    { name: 'David Lym', role: '4th Year', image: '/images/team_david.webp', link: 'https://www.linkedin.com/in/david-brandon-lym-33278a24b/' },
+    { name: 'Keanu Thakalath', role: 'Senior Software Expert', image: '/images/team_keanu.webp', link: 'https://www.linkedin.com/in/keanu-thakalath/' },
+    { name: 'Kemin Li', role: '3rd Year', image: '/images/team_kemin.webp', link: 'https://www.linkedin.com/in/kemin-lii/' },
+    { name: 'Thomas Chen', role: 'Designer/Developer', image: '/images/team_thomas.webp', link: 'https://www.linkedin.com/in/thomaschen04/' },
   ];
 
   return (
@@ -690,28 +698,45 @@ export default function App() {
         <div className="max-w-7xl mx-auto px-6">
           <SectionHeading title="Meet the Team" subtitle="The creative minds behind Write Right" theme={theme} />
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8">
-            {teamMembers.map((member, index) => (
-              <motion.div
-                key={member.name}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ delay: index * 0.1 }}
-                viewport={{ once: true }}
-                className="text-center"
-              >
-                <div className={`relative mb-6 mx-auto w-48 h-48 md:w-full md:h-auto aspect-square overflow-hidden rounded-2xl transition-all duration-500 grayscale-0`}>
+            {teamMembers.map((member, index) => {
+              const imageContent = (
+                <div className="relative mb-6 mx-auto w-48 h-48 md:w-full md:h-auto aspect-square overflow-hidden rounded-2xl transition-all duration-500 grayscale-0">
                   <img
                     src={member.image}
                     alt={member.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                     referrerPolicy="no-referrer"
                   />
-
+                  <div className="absolute inset-0 bg-teal-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
-                <h4 className={`text-lg font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{member.name}</h4>
-                <p className="text-teal-primary text-sm font-medium uppercase tracking-wider">{member.role}</p>
-              </motion.div>
-            ))}
+              );
+
+              return (
+                <motion.div
+                  key={member.name}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                  className="text-center group"
+                >
+                  {member.link ? (
+                    <a
+                      href={normalizeExternalLink(member.link)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="block"
+                    >
+                      {imageContent}
+                    </a>
+                  ) : (
+                    imageContent
+                  )}
+                  <h4 className={`text-lg font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{member.name}</h4>
+                  <p className="text-teal-primary text-sm font-medium uppercase tracking-wider">{member.role}</p>
+                </motion.div>
+              );
+            })}
           </div>
         </div>
       </section>
