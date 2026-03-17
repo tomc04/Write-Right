@@ -725,7 +725,7 @@ export default function App() {
                       href={normalizeExternalLink(member.link)}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="inline-block"
+                      className="block"
                     >
                       {imageContent}
                     </a>
