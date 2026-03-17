@@ -704,10 +704,10 @@ export default function App() {
                   <img
                     src={member.image}
                     alt={member.name}
-                    className="w-full h-full object-cover"
+                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
                     referrerPolicy="no-referrer"
                   />
-
+                  <div className="absolute inset-0 bg-teal-primary/20 opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               );
 
@@ -720,18 +720,18 @@ export default function App() {
                   viewport={{ once: true }}
                   className="text-center group"
                 >
-                  {member.link
-                    ? (
-                      <a
-                        href={normalizeExternalLink(member.link)}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-block"
-                      >
-                        {imageContent}
-                      </a>
-                    )
-                    : imageContent}
+                  {member.link ? (
+                    <a
+                      href={normalizeExternalLink(member.link)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block"
+                    >
+                      {imageContent}
+                    </a>
+                  ) : (
+                    imageContent
+                  )}
                   <h4 className={`text-lg font-bold mb-1 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{member.name}</h4>
                   <p className="text-teal-primary text-sm font-medium uppercase tracking-wider">{member.role}</p>
                 </motion.div>
