@@ -18,6 +18,7 @@ import {
   FlaskConical,
   Monitor,
   Layers,
+  ExternalLink,
 } from 'lucide-react';
 import logoSrc from './assets/Write_Right_Logo.png';
 
@@ -31,6 +32,7 @@ interface ProcessStep {
   detailedDescription: string;
   images: { src: string; caption: string }[];
   highlights?: string[];
+  figmaLink?: string;
 }
 
 // ─── Navbar ──────────────────────────────────────────────────────────────────
@@ -49,7 +51,7 @@ const Navbar = ({ theme, toggleTheme, logoSrc }: { theme: string; toggleTheme: (
     { name: 'Problem & Solution', href: '#problem-solution' },
     { name: 'Concept', href: '#concept' },
     { name: 'Process', href: '#process' },
-    { name: 'Demo', href: '#demo' },
+    { name: 'Prototype', href: '#demo' },
     { name: 'Team', href: '#team' },
   ];
 
@@ -200,6 +202,21 @@ const ProcessModal = ({ step, isOpen, onClose, theme }: { step: ProcessStep | nu
                 </div>
               )}
 
+              {/* Figma Link */}
+              {step.figmaLink && (
+                <div className="mb-8">
+                  <a
+                    href={step.figmaLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-6 py-3 bg-teal-primary text-white font-semibold rounded-full hover:bg-teal-600 transition-colors"
+                  >
+                    Try the Interactive Figma Prototype
+                    <ExternalLink size={16} />
+                  </a>
+                </div>
+              )}
+
               {/* Image Gallery */}
               {step.images.length > 0 && (
                 <div>
@@ -264,74 +281,7 @@ const ProcessModal = ({ step, isOpen, onClose, theme }: { step: ProcessStep | nu
   );
 };
 
-// ─── Demo Image Carousel ────────────────────────────────────────────────────
 
-const DemoCarousel = ({ theme }: { theme: string }) => {
-  const [current, setCurrent] = useState(0);
-
-  const screens = [
-    { src: '/images/3d_mockup_landing_page.webp', title: 'Landing Page', description: 'Start a new research project by entering your assignment details and rubric requirements.' },
-    { src: '/images/3d_mockup_project_setup.webp', title: 'Project Setup', description: 'Share your project details so Write Right can tailor its guidance to your specific assignment.' },
-    { src: '/images/3d_mockup_enter_topics.webp', title: 'Enter Topics', description: 'Add multiple topic ideas you\'re considering for your paper.' },
-    { src: '/images/3d_mockup_topic_scorecards.webp', title: 'Topic Scorecards', description: 'Each topic gets evaluated on complexity, nicheness, and rubric fit to help you choose the best one.' },
-    { src: '/images/3d_mockup_complexity_info.webp', title: 'Metric Details', description: 'Tap any metric for a detailed explanation of how it was calculated and what it means.' },
-    { src: '/images/3d_mockup_select_nara_park.webp', title: 'Topic Selection', description: 'Compare topics side-by-side and select the one that best fits your assignment.' },
-    { src: '/images/3d_mockup_sources_panel.webp', title: 'Source Management', description: 'Sources are organized by category with clear labels showing whether they were AI-suggested or uploaded by you.' },
-    { src: '/images/3d_mockup_source_detail_view.webp', title: 'Source Details', description: 'Expand any source to see its full details, summary, and relevance to your topic.' },
-    { src: '/images/3d_mockup_writing_suggestion.webp', title: 'Writing Assistance', description: 'As you write, the AI assistant provides contextual suggestions tied to your sources and rubric.' },
-    { src: '/images/3d_mockup_robot_review.webp', title: 'Robot Review', description: 'Accept, reject, or iterate on suggestions with full control over your writing process.' },
-  ];
-
-  return (
-    <div>
-      {/* Main Screen Display */}
-      <div className={`relative rounded-3xl overflow-hidden border shadow-2xl mb-8 ${theme === 'dark' ? 'bg-black border-white/10' : 'bg-white border-black/10'}`}>
-        <div className="flex items-center justify-center min-h-[300px] md:min-h-[500px] p-4">
-          <img
-            src={screens[current].src}
-            alt={screens[current].title}
-            className="max-w-full max-h-[480px] object-contain rounded-xl"
-          />
-        </div>
-        {/* Navigation */}
-        <button
-          onClick={() => setCurrent(prev => Math.max(prev - 1, 0))}
-          disabled={current === 0}
-          className={`absolute left-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center transition-all ${current === 0 ? 'opacity-30 cursor-not-allowed' : 'opacity-80 hover:opacity-100'} ${theme === 'dark' ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-black/10 text-black hover:bg-black/20'}`}
-        >
-          <ChevronLeft size={20} />
-        </button>
-        <button
-          onClick={() => setCurrent(prev => Math.min(prev + 1, screens.length - 1))}
-          disabled={current === screens.length - 1}
-          className={`absolute right-3 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full flex items-center justify-center transition-all ${current === screens.length - 1 ? 'opacity-30 cursor-not-allowed' : 'opacity-80 hover:opacity-100'} ${theme === 'dark' ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-black/10 text-black hover:bg-black/20'}`}
-        >
-          <ChevronRight size={20} />
-        </button>
-      </div>
-
-      {/* Screen Info */}
-      <div className="text-center mb-8">
-        <h4 className={`text-xl font-bold mb-2 ${theme === 'dark' ? 'text-white' : 'text-black'}`}>{screens[current].title}</h4>
-        <p className={`max-w-xl mx-auto ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>{screens[current].description}</p>
-        <p className={`text-sm mt-2 ${theme === 'dark' ? 'text-gray-600' : 'text-gray-400'}`}>{current + 1} / {screens.length}</p>
-      </div>
-
-      {/* Thumbnail Strip */}
-      <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar justify-center">
-        {screens.map((screen, i) => (
-          <button
-            key={i}
-            onClick={() => setCurrent(i)}
-            className={`flex-shrink-0 w-20 h-14 md:w-24 md:h-16 rounded-lg overflow-hidden border-2 transition-all ${i === current ? 'border-teal-primary opacity-100' : `${theme === 'dark' ? 'border-white/10' : 'border-black/10'} opacity-50 hover:opacity-80`}`}
-          >
-            <img src={screen.src} alt="" className="w-full h-full object-cover" />
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-};
 
 // ─── App ─────────────────────────────────────────────────────────────────────
 
@@ -492,12 +442,14 @@ export default function App() {
       thumbnail: '/images/3d_mockup_landing_page.webp',
       detailedDescription:
         'Our final high-fidelity digital mockup in Figma incorporates every lesson from our research, prototyping, and usability testing. It features a clean, low-cognitive-load interface with two primary flows: topic evaluation (with AI-powered scoring on complexity, nicheness, and rubric fit) and source-assisted writing (with organized sources, expandable details, and an AI writing assistant that users can accept, reject, or refine).',
+      figmaLink: 'https://www.figma.com/proto/Ivp7jg9FGY3nHJIgIwieoa/Write-Right?node-id=0-1&t=aRW3gpdp29MjF2j9-1',
       highlights: ['High-fidelity Figma prototype', 'Interactive flows', 'All usability fixes applied'],
       images: [
         { src: '/images/3d_mockup_landing_page.webp', caption: 'Landing page — start a new research project' },
         { src: '/images/3d_mockup_project_setup.webp', caption: 'Project setup — enter assignment details' },
         { src: '/images/3d_mockup_enter_topics.webp', caption: 'Enter topic ideas for evaluation' },
         { src: '/images/3d_mockup_topic_scorecards.webp', caption: 'Topic scorecards with AI-powered metrics' },
+        { src: '/images/3d_mockup_complexity_info.webp', caption: 'Metric details — tap any metric for a detailed explanation' },
         { src: '/images/3d_mockup_select_nara_park.webp', caption: 'Select your best-fit topic' },
         { src: '/images/3d_mockup_sources_panel.webp', caption: 'Organized sources with category groupings' },
         { src: '/images/3d_mockup_source_detail_view.webp', caption: 'Expanded source detail view' },
@@ -545,7 +497,7 @@ export default function App() {
                 Explore the Journey
               </a>
               <a href="#demo" className={`px-8 py-4 font-bold rounded-full transition-all backdrop-blur-sm ${theme === 'dark' ? 'bg-white/10 text-white hover:bg-white/20' : 'bg-black/5 text-black hover:bg-black/10'}`}>
-                Watch Demo
+                Watch Prototype Demo
               </a>
             </div>
           </motion.div>
@@ -692,25 +644,51 @@ export default function App() {
         </div>
       </section>
 
-      {/* Section 4: Product Demo */}
+      {/* Section 4: Working Prototype */}
       <section id="demo" className={`py-24 transition-colors duration-300 ${theme === 'dark' ? 'bg-[#0f0f0f]' : 'bg-gray-50'}`}>
         <div className="max-w-7xl mx-auto px-6">
-          <div className="text-center mb-16">
-            <SectionHeading title="Product Demo" subtitle="Walk through our final design" theme={theme} />
-          </div>
-          <div className="max-w-5xl mx-auto">
-            <DemoCarousel theme={theme} />
-          </div>
-          <div className="text-center mt-12">
-            <a
-              href="https://www.figma.com/proto/Ivp7jg9FGY3nHJIgIwieoa/Write-Right?node-id=0-1&t=aRW3gpdp29MjF2j9-1"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 px-8 py-3 bg-teal-primary text-white font-semibold rounded-full hover:bg-teal-600 transition-colors"
+          <SectionHeading title="Working Prototype" subtitle="See Write Right in action" theme={theme} />
+          <div className="max-w-4xl mx-auto">
+            {/* Demo Video */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className={`rounded-3xl overflow-hidden border shadow-2xl ${theme === 'dark' ? 'bg-black border-white/10' : 'bg-white border-black/10'}`}
             >
-              Try the Interactive Figma Prototype
-              <ChevronRight size={18} />
-            </a>
+              <video
+                controls
+                playsInline
+                preload="metadata"
+                className="w-full"
+                poster="/images/3d_mockup_landing_page.webp"
+              >
+                <source src="/write-right-demo.webm" type="video/webm" />
+                Your browser does not support the video tag.
+              </video>
+            </motion.div>
+
+            {/* Prototype Link */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              viewport={{ once: true }}
+              className="text-center mt-12"
+            >
+              <p className={`text-lg mb-6 ${theme === 'dark' ? 'text-gray-400' : 'text-gray-600'}`}>
+                We built a working code prototype using AI coding tools as a stretch goal. Try it out below!
+              </p>
+              <a
+                href="https://write-right-zeta.vercel.app/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 px-8 py-3 bg-teal-primary text-white font-semibold rounded-full hover:bg-teal-600 transition-colors"
+              >
+                Try the Working Prototype
+                <ExternalLink size={18} />
+              </a>
+            </motion.div>
           </div>
         </div>
       </section>
@@ -726,10 +704,10 @@ export default function App() {
                   <img
                     src={member.image}
                     alt={member.name}
-                    className="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-700"
+                    className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"
                   />
-                  <div className="absolute inset-0 bg-teal-primary/20 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+
                 </div>
               );
 
@@ -782,8 +760,8 @@ export default function App() {
                 <li><a href="#problem-solution" className="hover:text-teal-primary transition-colors">Problem & Solution</a></li>
                 <li><a href="#concept" className="hover:text-teal-primary transition-colors">Our Concept</a></li>
                 <li><a href="#process" className="hover:text-teal-primary transition-colors">Our Process</a></li>
-                <li><a href="#demo" className="hover:text-teal-primary transition-colors">Product Demo</a></li>
-                <li><a href="https://www.figma.com/proto/Ivp7jg9FGY3nHJIgIwieoa/Write-Right?node-id=0-1&t=aRW3gpdp29MjF2j9-1" target="_blank" rel="noopener noreferrer" className="hover:text-teal-primary transition-colors">Figma Prototype</a></li>
+                <li><a href="#demo" className="hover:text-teal-primary transition-colors">Working Prototype</a></li>
+                <li><a href="https://write-right-zeta.vercel.app/" target="_blank" rel="noopener noreferrer" className="hover:text-teal-primary transition-colors">Try Write Right</a></li>
               </ul>
             </div>
             <div>
