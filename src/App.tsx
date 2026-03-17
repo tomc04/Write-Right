@@ -460,7 +460,7 @@ export default function App() {
   ];
 
   const teamMembers = [
-    { name: 'Brian Koh', role: '3rd Year', image: '/images/team_brian.webp', link: '' },
+    { name: 'Brian Koh', role: '3rd Year', image: '/images/team_brian.webp', link: 'https://www.linkedin.com/in/briankoh42' },
     { name: 'David Lym', role: '4th Year', image: '/images/team_david.webp', link: '' },
     { name: 'Keanu Thakalath', role: 'Senior Software Expert', image: '/images/team_keanu.webp', link: '' },
     { name: 'Kemin Li', role: '3rd Year', image: '/images/team_kemin.webp', link: '' },
